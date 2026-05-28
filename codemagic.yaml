@@ -5,7 +5,7 @@ workflows:
       java: 17
     scripts:
       - name: Preparar certificado de seguridad
-        script: base64 --decode debug.keystore.base64 > debug.keystore
+        script: base64 --decode -i debug.keystore.base64 -o debug.keystore
       - name: Descargar e instalar Gradle 9.3.1
         script: |
           curl -sLO https://services.gradle.org/distributions/gradle-9.3.1-bin.zip
