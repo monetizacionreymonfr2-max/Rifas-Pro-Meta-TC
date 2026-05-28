@@ -4,9 +4,7 @@ workflows:
     environment:
       java: 17
     scripts:
-      - name: Dar permisos de ejecucion
-        script: chmod +x gradlew
       - name: Compilar instalador APK
-        script: ./gradlew assembleDebug
+        script: gradle assembleDebug
     artifacts:
       - app/build/outputs/**/*.apk
