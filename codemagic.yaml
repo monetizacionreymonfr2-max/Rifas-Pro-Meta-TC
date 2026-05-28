@@ -4,11 +4,11 @@ workflows:
     environment:
       java: 17
     scripts:
-      - name: Descargar e instalar Gradle 8.13
+      - name: Descargar e instalar Gradle 8.14.1
         script: |
-          curl -sLO https://services.gradle.org/distributions/gradle-8.13-bin.zip
-          unzip -q gradle-8.13-bin.zip
+          curl -sLO https://services.gradle.org/distributions/gradle-8.14.1-bin.zip
+          unzip -q gradle-8.14.1-bin.zip
       - name: Compilar instalador APK
-        script: ./gradle-8.13/bin/gradle assembleDebug
+        script: ./gradle-8.14.1/bin/gradle assembleDebug
     artifacts:
       - app/build/outputs/**/*.apk
