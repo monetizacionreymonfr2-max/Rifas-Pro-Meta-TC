@@ -1,0 +1,12 @@
+workflows:
+  android-build:
+    name: Compilar APK
+    environment:
+      java: 17
+    scripts:
+      - name: Dar permisos de ejecucion
+        script: chmod +x gradlew
+      - name: Compilar instalador APK
+        script: ./gradlew assembleDebug
+    artifacts:
+      - app/build/outputs/**/*.apk
