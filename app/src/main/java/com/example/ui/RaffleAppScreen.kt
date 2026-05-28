@@ -137,6 +137,7 @@ fun RaffleAppScreen(viewModel: RaffleViewModel) {
 
     var showCreateDialog by remember { mutableStateOf(false) }
     var clientPortalSimActive by remember { mutableStateOf(false) }
+    var showSettingsDialog by remember { mutableStateOf(false) }
 
     CarbonFiberBackground(
         modifier = Modifier
@@ -162,7 +163,8 @@ fun RaffleAppScreen(viewModel: RaffleViewModel) {
                     RaffleDashboard(
                         raffles = raffles,
                         onRaffleSelected = { viewModel.selectRaffle(it) },
-                        onCreateRequested = { showCreateDialog = true }
+                        onCreateRequested = { showCreateDialog = true },
+                        onOpenSettings = { showSettingsDialog = true }
                     )
                 }
                 "detail" -> {
@@ -221,6 +223,12 @@ fun RaffleAppScreen(viewModel: RaffleViewModel) {
                 }
             )
         }
+
+        if (showSettingsDialog) {
+            AppSettingsDialog(
+                onDismiss = { showSettingsDialog = false }
+            )
+        }
     }
 }
 
@@ -231,7 +239,8 @@ fun RaffleAppScreen(viewModel: RaffleViewModel) {
 fun RaffleDashboard(
     raffles: List<Raffle>,
     onRaffleSelected: (Int) -> Unit,
-    onCreateRequested: () -> Unit
+    onCreateRequested: () -> Unit,
+    onOpenSettings: () -> Unit
 ) {
     Scaffold(
         containerColor = Color.Transparent,
@@ -287,6 +296,7 @@ fun RaffleDashboard(
                         .size(48.dp)
                         .background(CardCyber, RoundedCornerShape(12.dp))
                         .border(1.dp, BorderCyber, RoundedCornerShape(12.dp))
+                        .clickable { onOpenSettings() }
                         .wrapContentSize(Alignment.Center)
                 ) {
                     Icon(
@@ -1740,12 +1750,28 @@ fun ShareLinkDialog(
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
-
-    // Simulate generating a unique URL with encrypted/parsed parameters containing the raffle state
+    val prefs = remember { context.getSharedPreferences("raffle_prefs", Context.MODE_PRIVATE) }
+    
+    val rawBasePortalUrl = prefs.getString("base_portal_url", "")?.trim() ?: ""
+    val basePortalUrl = if (rawBasePortalUrl.isEmpty()) {
+        "https://[TU_GITHUB_USERNAME].github.io/[REPOSITORIO]/index.html"
+    } else {
+        rawBasePortalUrl
+    }
+    
+    val organizerPhone = prefs.getString("organizer_whatsapp", "") ?: ""
     val totalSold = soldTickets.size
-    val occupiedString = soldTickets.take(30).map { it.number }.joinToString(",")
-    val overflow = if (soldTickets.size > 30) "..." else ""
-    val clientAppUrl = "https://rifaspro.quantum/seleccionar?id=${raffle.id}&tot=${raffle.totalNumbers}&sz=${if (raffle.startFromZero) 1 else 0}&occ=$occupiedString$overflow"
+    val occupiedString = soldTickets.map { it.number }.joinToString(",")
+
+    // Properly URL-encode all text custom fields to prevent breaks on accents, spaces, or emojis
+    val encodedTitle = java.net.URLEncoder.encode(raffle.title, "UTF-8")
+    val encodedPrize = java.net.URLEncoder.encode(raffle.prize, "UTF-8")
+    val encodedPrice = java.net.URLEncoder.encode(formatCurrency(raffle.ticketPrice), "UTF-8")
+    val encodedDesc = java.net.URLEncoder.encode(raffle.description, "UTF-8")
+    val encodedPhone = java.net.URLEncoder.encode(organizerPhone, "UTF-8")
+
+    val separator = if (basePortalUrl.contains("?")) "&" else "?"
+    val clientAppUrl = "$basePortalUrl${separator}id=${raffle.id}&tot=${raffle.totalNumbers}&sz=${if (raffle.startFromZero) 1 else 0}&occ=$occupiedString&title=$encodedTitle&prize=$encodedPrize&price=$encodedPrice&desc=$encodedDesc&phone=$encodedPhone"
 
     // Construct beautiful messaging script
     val sharingMessageText = """
@@ -1758,6 +1784,7 @@ Participa en la rifa interactiva: *"${raffle.title}"*
 Elige tu número de la suerte directamente desde el *Portal de Selección Inteligente* ingresando aquí:
 👉 $clientAppUrl
 
+${if (rawBasePortalUrl.isEmpty()) "⚠️ (Nota: Configura tu URL de GitHub Pages en el engranaje de Ajustes del panel principal para que el enlace sea funcional para tus clientes)." else ""}
 _Sorteo gestionado en el ecosistema cuántico de Rifas Pro._
     """.trimIndent()
 
@@ -2192,4 +2219,155 @@ fun ClientPortalSimulator(
             )
         }
     }
+}
+
+// ==========================================
+// 7. GLOBAL SETTINGS DIALOG (SHAPING REAL PORTALS)
+// ==========================================
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AppSettingsDialog(onDismiss: () -> Unit) {
+    val context = LocalContext.current
+    val prefs = remember { context.getSharedPreferences("raffle_prefs", Context.MODE_PRIVATE) }
+    
+    var basePortalUrl by remember { mutableStateOf(prefs.getString("base_portal_url", "") ?: "") }
+    var organizerWhatsapp by remember { mutableStateOf(prefs.getString("organizer_whatsapp", "") ?: "") }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+            .border(2.dp, CyberCyan, RoundedCornerShape(28.dp))
+            .background(CardCyber, RoundedCornerShape(28.dp)),
+        title = null,
+        text = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+            ) {
+                // Header
+                Text(
+                    text = "CONFIGURACIÓN GLOBAL",
+                    fontWeight = FontWeight.Black,
+                    fontSize = 18.sp,
+                    fontFamily = FontFamily.Monospace,
+                    color = CyberCyan,
+                    letterSpacing = 1.sp
+                )
+                Text(
+                    text = "Ajusta la integración de tu portal de selección de números y para que clientes te contacten.",
+                    fontSize = 11.sp,
+                    color = Color.LightGray.copy(alpha = 0.7f),
+                    modifier = Modifier.padding(top = 4.dp, bottom = 16.dp)
+                )
+
+                // Organizer Phone Number Field
+                Text(
+                    text = "TELÉFONO DE WHATSAPP (ORGANIZADOR)",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 10.sp,
+                    color = CyberPurple,
+                    fontFamily = FontFamily.Monospace,
+                    modifier = Modifier.padding(bottom = 6.dp)
+                )
+                OutlinedTextField(
+                    value = organizerWhatsapp,
+                    onValueChange = { organizerWhatsapp = it },
+                    placeholder = { Text("Ej: +56912345678 o 56912345678", color = Color.Gray, fontSize = 13.sp) },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 14.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = CyberCyan,
+                        unfocusedBorderColor = Color.Gray.copy(alpha = 0.5f),
+                        focusedTextColor = Color.White,
+                        unfocusedTextColor = Color.White
+                    ),
+                    shape = RoundedCornerShape(12.dp)
+                )
+
+                // Portal URL Field
+                Text(
+                    text = "URL BASE DEL PORTAL WEB",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 10.sp,
+                    color = CyberPurple,
+                    fontFamily = FontFamily.Monospace,
+                    modifier = Modifier.padding(bottom = 6.dp)
+                )
+                OutlinedTextField(
+                    value = basePortalUrl,
+                    onValueChange = { basePortalUrl = it },
+                    placeholder = { Text("Ej: https://usuario.github.io/proyecto/", color = Color.Gray, fontSize = 13.sp) },
+                    singleLine = true,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = CyberCyan,
+                        unfocusedBorderColor = Color.Gray.copy(alpha = 0.5f),
+                        focusedTextColor = Color.White,
+                        unfocusedTextColor = Color.White
+                    ),
+                    shape = RoundedCornerShape(12.dp)
+                )
+                
+                // Detailed Guide Info inside Card
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Color(0xFF130A21))
+                        .border(1.dp, BorderCyber, RoundedCornerShape(12.dp))
+                        .padding(12.dp)
+                ) {
+                    Column {
+                        Text(
+                            text = "💡 ¿CÓMO HACER QUE FUNCIONE TU ENLACE?",
+                            fontFamily = FontFamily.Monospace,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 10.sp,
+                            color = CyberCyan
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = "1. Sube tu aplicación a GitHub usando el botón 'Subir a GitHub' o 'GitHub' en la barra superior derecha de tu pantalla.\n\n" +
+                                   "2. En tu repositorio, ingresa a 'Settings' (Ajustes) -> 'Pages'. En la sección de 'Build and deployment', selecciona la rama 'main' (folder /root) y haz clic en 'Save'.\n\n" +
+                                   "3. ¡Copias el dominio que te proporcione GitHub Pages! Pégalo aquí en el campo superior. Tus clientes visitarán esa página web real, se toparán con un tablero interactivo sincronizado y elegirán los números directamente.",
+                            fontSize = 10.sp,
+                            color = Color.LightGray,
+                            lineHeight = 14.sp
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    prefs.edit()
+                        .putString("base_portal_url", basePortalUrl.trim())
+                        .putString("organizer_whatsapp", organizerWhatsapp.trim())
+                        .apply()
+                    Toast.makeText(context, "¡Configuración guardada!", Toast.LENGTH_SHORT).show()
+                    onDismiss()
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = CyberCyan)
+            ) {
+                Text(text = "GUARDAR", color = DeepSpaceBg, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(text = "CANCELAR", color = Color.White, fontFamily = FontFamily.Monospace)
+            }
+        },
+        containerColor = CardCyber,
+        shape = RoundedCornerShape(28.dp)
+    )
 }

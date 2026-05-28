@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sorteos Quantum - Selección de Número</title>
+    <!-- Google Fonts for Cyber Tech Styling -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-deep: #0C0714;
+            --bg-card: #140D24;
+            --cyber-cyan: #00FFCC;
+            --cyber-purple: #B388FF;
+            --cyber-pink: #FF007F;
+            --border-cyber: rgba(179, 136, 255, 0.25);
+            --text-glow: 0 0 10px rgba(0, 255, 204, 0.4);
+            --purple-glow: 0 0 15px rgba(179, 136, 255, 0.3);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background-color: var(--bg-deep);
+            color: #FFFFFF;
+            min-height: 100vh;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+            /* Cyber network background grids */
+            background-image: 
+                linear-gradient(rgba(179, 136, 255, 0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(179, 136, 255, 0.04) 1px, transparent 1px);
+            background-size: 24px 24px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Ambient Header Card */
+        .portal-header {
+            background: linear-gradient(135deg, #1A0F2E 0%, #110822 100%);
+            border: 1px solid var(--cyber-cyan);
+            box-shadow: var(--text-glow), var(--purple-glow);
+            border-radius: 16px;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .portal-header::before {
+            content: '';
+            position: absolute;
+            top: 0; right: 0;
+            width: 80px; height: 80px;
+            background: radial-gradient(circle, rgba(0, 255, 204, 0.15) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .category-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(0, 255, 204, 0.1);
+            border: 1px solid var(--cyber-cyan);
+            border-radius: 200px;
+            padding: 4px 12px;
+            font-size: 10px;
+            font-weight: 800;
+            color: var(--cyber-cyan);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            font-family: 'JetBrains Mono', monospace;
+            margin-bottom: 12px;
+        }
+
+        .category-chip .dot {
+            width: 6px;
+            height: 6px;
+            background-color: var(--cyber-cyan);
+            border-radius: 50%;
+            box-shadow: 0 0 6px var(--cyber-cyan);
+            animation: blink 1.5s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: 800;
+            color: #FFFFFF;
+            letter-spacing: -0.5px;
+            line-height: 1.2;
+            word-wrap: break-word;
+        }
+
+        .raffle-description {
+            font-size: 13px;
+            color: #A096B4;
+            margin-top: 6px;
+            line-height: 1.4;
+        }
+
+        /* Metric Grid Row */
+        .metrics-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px dashed rgba(179, 136, 255, 0.2);
+        }
+
+        .metric-card {
+            background: rgba(179, 136, 255, 0.05);
+            padding: 10px 12px;
+            border-radius: 8.dp;
+            border: 1px solid var(--border-cyber);
+            text-align: left;
+        }
+
+        .metric-title {
+            font-size: 9px;
+            color: var(--cyber-purple);
+            font-family: 'JetBrains Mono', monospace;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .metric-value {
+            font-size: 16px;
+            font-weight: 700;
+            color: #FFFFFF;
+            margin-top: 2px;
+        }
+
+        /* Stat Indicators */
+        .stats-bar {
+            display: flex;
+            justify-content: space-between;
+            background: var(--bg-card);
+            border: 1px solid var(--border-cyber);
+            border-radius: 12px;
+            padding: 12px 16px;
+            font-size: 11px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .stat-box {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+        }
+
+        .stat-box.free { background: #1C132C; border: 1px solid var(--cyber-purple); }
+        .stat-box.selected { background: var(--cyber-cyan); box-shadow: 0 0 6px var(--cyber-cyan); }
+        .stat-box.occupied { background: rgba(255, 255, 255, 0.1); border: 1px dashed rgba(255, 255, 255, 0.25); }
+
+        /* Numbers Selection Card Grid */
+        .numbers-container {
+            background: var(--bg-card);
+            border: 1px solid var(--border-cyber);
+            border-radius: 16px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .numbers-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .numbers-title {
+            font-size: 12px;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            letter-spacing: 1px;
+            color: var(--cyber-purple);
+            text-transform: uppercase;
+        }
+
+        .numbers-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+        }
+
+        .number-cell {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+            position: relative;
+        }
+
+        /* Available/Free Style */
+        .number-cell.free {
+            background: #1C132C;
+            border: 1px solid var(--cyber-purple);
+            color: #FFFFFF;
+        }
+
+        .number-cell.free:hover {
+            border-color: var(--cyber-cyan);
+            box-shadow: 0 0 10px rgba(0, 255, 204, 0.3);
+            transform: scale(1.05);
+        }
+
+        /* Selected State Style */
+        .number-cell.selected {
+            background: var(--cyber-cyan);
+            border: 1px solid var(--cyber-cyan);
+            color: var(--bg-deep);
+            box-shadow: var(--text-glow);
+            transform: scale(1.08);
+            font-weight: 800;
+        }
+
+        /* Occupied/Sold State Style */
+        .number-cell.occupied {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px dashed rgba(255, 255, 255, 0.15);
+            color: rgba(255, 255, 255, 0.2);
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .number-cell.occupied::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 1.5px;
+            background: rgba(255, 255, 255, 0.15);
+            transform: rotate(-45deg);
+        }
+
+        /* Primary Action Floating Footer / Reservation Bar */
+        .action-bar {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: calc(100% - 32px);
+            max-width: 468px;
+            background: rgba(20, 13, 36, 0.95);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--cyber-cyan);
+            box-shadow: var(--text-glow);
+            border-radius: 12px;
+            padding: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            z-index: 100;
+            display: none;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .action-text {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .action-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--cyber-purple);
+        }
+
+        .action-highlight {
+            font-size: 14px;
+            font-weight: 800;
+            color: #FFFFFF;
+        }
+
+        .action-btn {
+            background-color: var(--cyber-cyan);
+            color: var(--bg-deep);
+            border: none;
+            border-radius: 8px;
+            padding: 10px 18px;
+            font-size: 13px;
+            font-weight: 800;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0, 255, 204, 0.2);
+            transition: all 0.2s ease;
+        }
+
+        .action-btn:hover {
+            background-color: #00d6aa;
+            transform: translateY(-1px);
+        }
+
+        /* Interactive Reservation Overlay Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(12, 7, 20, 0.85);
+            backdrop-filter: blur(4px);
+            z-index: 110;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.25s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-card {
+            background: #190F2E;
+            border: 1px solid var(--cyber-purple);
+            border-radius: 20px;
+            width: 100%;
+            max-width: 400px;
+            padding: 24px;
+            box-shadow: var(--purple-glow);
+            transform: translateY(20px);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .modal-overlay.active .modal-card {
+            transform: translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-size: 16px;
+            font-weight: 800;
+            color: var(--cyber-cyan);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 16px;
+        }
+
+        label {
+            font-size: 9px;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--cyber-purple);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .input-control {
+            background: rgba(20, 13, 36, 0.8);
+            border: 1px solid rgba(179, 136, 255, 0.3);
+            border-radius: 8px;
+            height: 48px;
+            padding: 0 14px;
+            color: #FFFFFF;
+            font-family: inherit;
+            font-size: 14px;
+            width: 100%;
+            transition: border-color 0.2s ease;
+        }
+
+        .input-control:focus {
+            outline: none;
+            border-color: var(--cyber-cyan);
+            box-shadow: var(--text-glow);
+        }
+
+        .whatsapp-btn {
+            background-color: #25D366;
+            color: #FFFFFF;
+            width: 100%;
+            border: none;
+            height: 48px;
+            border-radius: 8px;
+            font-weight: 800;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 8px;
+            transition: background-color 0.2s ease;
+        }
+
+        .whatsapp-btn:hover {
+            background-color: #128C7E;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: var(--cyber-purple);
+        }
+
+        /* SVG Whatsapp Icon */
+        .wa-icon {
+            width: 20px;
+            height: 20px;
+            fill: #FFFFFF;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- HEADER -->
+        <header class="portal-header">
+            <div class="category-chip">
+                <span class="dot"></span>Portal de Selección Inteligente
+            </div>
+            <h1 id="raffle-title">Rifa Quantum</h1>
+            <p id="raffle-desc" class="raffle-description">Cargando detalles de la rifa...</p>
+            
+            <div class="metrics-row">
+                <div class="metric-card">
+                    <p class="metric-title">Premio</p>
+                    <p id="raffle-prize" class="metric-value">-</p>
+                </div>
+                <div class="metric-card">
+                    <p class="metric-title">Costo Boleto</p>
+                    <p id="raffle-price" class="metric-value">-</p>
+                </div>
+            </div>
+        </header>
+
+        <!-- STATS BAR -->
+        <div class="stats-bar">
+            <div class="stat-item">
+                <span class="stat-box free"></span>
+                <span>Disponible (<span id="count-free">0</span>)</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-box selected"></span>
+                <span>Elegido</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-box occupied"></span>
+                <span>Ocupado (<span id="count-occupied">0</span>)</span>
+            </div>
+        </div>
+
+        <!-- NUMBERS GRID PANEL -->
+        <section class="numbers-container">
+            <div class="numbers-header">
+                <h3 class="numbers-title">Cartelera de Números</h3>
+                <span id="selected-summary" style="font-size: 11px; font-family:'JetBrains Mono', monospace; color: var(--cyber-cyan);">Ninguno seleccionado</span>
+            </div>
+            <div id="numbers-grid-container" class="numbers-grid">
+                <!-- Numbers loaded dynamically -->
+            </div>
+        </section>
+        
+        <div style="height: 100px;"></div>
+    </div>
+
+    <!-- PERSISTENT RESERVATION PANEL -->
+    <div id="reservation-action-bar" class="action-bar">
+        <div class="action-text">
+            <span id="action-label" class="action-label">Has elegido un número</span>
+            <span id="action-highlight" class="action-highlight">Número ##</span>
+        </div>
+        <button id="book-now-button" class="action-btn">Reservar Boleto</button>
+    </div>
+
+    <!-- CLIENT DETAILS MODAL -->
+    <div id="form-overlay" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 class="modal-title">Pre-Reservar Número</h3>
+                <button id="close-modal-btn" class="modal-close">&times;</button>
+            </div>
+            <form id="reservation-form" onsubmit="handleFormSubmission(event)">
+                <div class="form-group">
+                    <label for="client-name">Nombre Completo</label>
+                    <input id="client-name" type="text" class="input-control" placeholder="Escribe tu nombre" required autocomplete="name">
+                </div>
+                <div class="form-group" style="margin-bottom: 24px;">
+                    <label for="client-phone">Número Telefónico</label>
+                    <input id="client-phone" type="tel" class="input-control" placeholder="+56 9 1234 5678" required autocomplete="tel">
+                </div>
+                <button type="submit" class="whatsapp-btn">
+                    <svg class="wa-icon" viewBox="0 0 24 24">
+                        <path d="M12.031 6.172c-2.316 0-4.199 1.878-4.2 4.196-.001 1.054.39 2.051 1.066 2.827l-.697 2.545 2.613-.684a4.17 4.17 0 0 0 1.218.188h.001c2.317 0 4.2-1.878 4.201-4.197 0-1.123-.438-2.18-1.233-2.975a4.162 4.162 0 0 0-2.968-1.2ZM15.4 13.916c-.073.204-.366.402-.596.442-.23.041-.53.076-1.57-.354-1.232-.509-2.023-1.765-2.083-1.846-.06-.081-.502-.669-.502-1.28 0-.612.316-.913.43-.1.036L12.016 11.23c.092.193.183.315.274.502.09.188.046.353-.023.493-.069.141-.309.431-.412.553-.131.155-.262.245-.09.548.172.302.766 1.26 1.644 2.04.752.668 1.386.874 1.71.996.326.122.518.069.712-.147.194-.216.828-.962.943-1.107.115-.146.223-.122.378-.065.155.057.985.465 1.157.551.172.086.286.128.328.201.042.064.042.37-.031.574Z"/>
+                        <path d="M12.004 2C6.48 2 2.01 6.47 2 12c-.004 1.763.456 3.486 1.332 5.006L2 22l5.132-1.346c1.47.802 3.125 1.226 4.868 1.23h.004c5.524 0 9.994-4.47 10-10C22.008 6.48 17.538 2.004 12.004 2Zm.003 18.25h-.003c-1.547-.002-3.064-.417-4.385-1.199l-.315-.187-3.26.854.87-3.176-.205-.327a8.21 8.21 0 0 1-1.258-4.383c.003-4.545 3.7-8.24 8.25-8.24.2.203 2.195.002 4.383.004 1.107-.005 2.148.423 2.932 1.207a8.204 8.204 0 0 1 2.42 5.867c-.004 4.548-3.702 8.243-8.252 8.243Z"/>
+                    </svg>
+                    Reservar vía WhatsApp
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- JS LOGIC TO READ DYNAMIC ENCODED DATA AND GENERATE SOCIAL LINK -->
+    <script>
+        // Parameters mapping
+        let raffleData = {
+            id: 1,
+            totalNumbers: 100,
+            startFromZero: false,
+            occupied: [],
+            title: "Sorteo Premium",
+            description: "¡Sorteo administrado de forma segura localmente en Rifas Pro! Elige un número para reservar.",
+            prize: "Premio Sorpresa",
+            ticketPrice: "$1.000",
+            organizerPhone: ""
+        };
+
+        let selectedNumber = null;
+
+        // Parse query parameters
+        function parseQueryParameters() {
+            const params = new URLSearchParams(window.location.search);
+            
+            if (params.get('id')) raffleData.id = parseInt(params.get('id'));
+            if (params.get('tot')) raffleData.totalNumbers = parseInt(params.get('tot'));
+            if (params.get('sz')) raffleData.startFromZero = params.get('sz') === '1';
+            
+            // Occupied numbers
+            if (params.get('occ')) {
+                const occStr = params.get('occ');
+                raffleData.occupied = occStr.split(',')
+                    .map(n => parseInt(n))
+                    .filter(n => !isNaN(n));
+            }
+            
+            // Custom Metadata to avoid mock databases
+            if (params.get('title')) raffleData.title = decodeURIComponent(params.get('title'));
+            if (params.get('prize')) raffleData.prize = decodeURIComponent(params.get('prize'));
+            if (params.get('price')) raffleData.ticketPrice = decodeURIComponent(params.get('price'));
+            if (params.get('desc')) raffleData.description = decodeURIComponent(params.get('desc'));
+            if (params.get('phone')) raffleData.organizerPhone = decodeURIComponent(params.get('phone'));
+        }
+
+        // Render standard interface
+        function renderInterface() {
+            document.getElementById('raffle-title').textContent = raffleData.title;
+            document.getElementById('raffle-desc').textContent = raffleData.description;
+            document.getElementById('raffle-prize').textContent = raffleData.prize;
+            document.getElementById('raffle-price').textContent = raffleData.ticketPrice;
+
+            document.getElementById('count-occupied').textContent = raffleData.occupied.length;
+            const freeCount = raffleData.totalNumbers - raffleData.occupied.length;
+            document.getElementById('count-free').textContent = freeCount;
+
+            const gridContainer = document.getElementById('numbers-grid-container');
+            gridContainer.innerHTML = '';
+
+            const startIdx = raffleData.startFromZero ? 0 : 1;
+            const endIdx = raffleData.startFromZero ? raffleData.totalNumbers - 1 : raffleData.totalNumbers;
+            const maxValWidth = endIdx.toString().length;
+
+            for (let i = startIdx; i <= endIdx; i++) {
+                const cell = document.createElement('div');
+                const paddedNumber = i.toString().padStart(Math.max(2, maxValWidth), '0');
+                cell.textContent = paddedNumber;
+                cell.className = 'number-cell';
+                cell.dataset.number = i;
+
+                if (raffleData.occupied.includes(i)) {
+                    cell.classList.add('occupied');
+                    cell.title = "Número ocupado";
+                } else {
+                    cell.classList.add('free');
+                    cell.onclick = () => selectNumberCell(i, cell);
+                }
+
+                gridContainer.appendChild(cell);
+            }
+        }
+
+        // Handle clicking cells
+        function selectNumberCell(number, element) {
+            const gridContainer = document.getElementById('numbers-grid-container');
+            // Reset previous selected
+            const prevSelected = gridContainer.querySelector('.number-cell.selected');
+            if (prevSelected) {
+                prevSelected.classList.remove('selected');
+                prevSelected.classList.add('free');
+            }
+
+            if (selectedNumber === number) {
+                // Deselect
+                selectedNumber = null;
+                document.getElementById('selected-summary').textContent = 'Ninguno seleccionado';
+                document.getElementById('reservation-action-bar').style.display = 'none';
+            } else {
+                // Select new
+                selectedNumber = number;
+                element.classList.remove('free');
+                element.classList.add('selected');
+                
+                const paddedStr = number.toString().padStart(2, '0');
+                document.getElementById('selected-summary').textContent = `Número ${paddedStr} Elegido`;
+                
+                // Show floating bar
+                document.getElementById('action-highlight').textContent = `Número ${paddedStr}`;
+                const bar = document.getElementById('reservation-action-bar');
+                bar.style.display = 'flex';
+                bar.focus();
+            }
+        }
+
+        // Modal triggers
+        document.getElementById('book-now-button').onclick = () => {
+            if (selectedNumber === null) return;
+            document.getElementById('form-overlay').classList.add('active');
+        };
+
+        document.getElementById('close-modal-btn').onclick = () => {
+            document.getElementById('form-overlay').classList.remove('active');
+        };
+
+        document.getElementById('form-overlay').onclick = (e) => {
+            if (e.target === document.getElementById('form-overlay')) {
+                document.getElementById('form-overlay').classList.remove('active');
+            }
+        };
+
+        // Final reservation submit
+        function handleFormSubmission(event) {
+            event.preventDefault();
+            const name = document.getElementById('client-name').value.trim();
+            const phone = document.getElementById('client-phone').value.trim();
+            
+            if (!name || !phone || selectedNumber === null) return;
+
+            const paddedNum = selectedNumber.toString().padStart(2, '0');
+            
+            // Build Whatsapp redirection message text
+            let templateMessage = `🚀 *¡RESERVACIÓN DE RIFA EN CURSO!* 🚀\n\n` +
+                                  `Hola, realizo la pre-reserva de un boleto:\n` +
+                                  `🎫 *NÚMERO ELEGIDO:* ${paddedNum}\n` +
+                                  `👑 *RIFA:* ${raffleData.title}\n` +
+                                  `🎁 *PREMIO:* ${raffleData.prize}\n\n` +
+                                  `*DATOS DEL CLIENTE:*\n` +
+                                  `👤 *Nombre:* ${name}\n` +
+                                  `📱 *Contacto:* ${phone}\n\n` +
+                                  `_Por favor confírmame los datos para acordar el pago de ${raffleData.ticketPrice}. ¡Gracias!_`;
+
+            const encodedMsg = encodeURIComponent(templateMessage);
+            const rawPhone = raffleData.organizerPhone.replace(/[^0-9+]/g, '');
+            
+            // Standard WhatsApp URL. Uses organizer custom phone if supplied, else general fallback.
+            let whatsappUrl = `https://api.whatsapp.com/send?text=${encodedMsg}`;
+            if (rawPhone) {
+                whatsappUrl = `https://api.whatsapp.com/send?phone=${rawPhone}&text=${encodedMsg}`;
+            }
+
+            // Open Whatsapp in new tab/app immediately
+            window.open(whatsappUrl, '_blank');
+            document.getElementById('form-overlay').classList.remove('active');
+        }
+
+        // Bootstrap
+        window.addEventListener('DOMContentLoaded', () => {
+            parseQueryParameters();
+            renderInterface();
+        });
+    </script>
+</body>
+</html>
