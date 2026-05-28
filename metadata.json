@@ -1,0 +1,6 @@
+{
+  "name": "Rifas Pro",
+  "description": "Una aplicación futurista e innovadora para crear, gestionar y vender números de rifas con soporte ilimitado, registro de clientes y generación de enlaces de compartición interactivos.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
