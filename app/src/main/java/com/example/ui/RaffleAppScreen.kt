@@ -1754,7 +1754,7 @@ fun ShareLinkDialog(
     
     val rawBasePortalUrl = prefs.getString("base_portal_url", "")?.trim() ?: ""
     val basePortalUrl = if (rawBasePortalUrl.isEmpty()) {
-        "https://[TU_GITHUB_USERNAME].github.io/[REPOSITORIO]/index.html"
+        "https://monetizacionreymonfr2-max.github.io/Rifas-Pro-Meta-TC/"
     } else {
         rawBasePortalUrl
     }
@@ -1784,7 +1784,7 @@ Participa en la rifa interactiva: *"${raffle.title}"*
 Elige tu número de la suerte directamente desde el *Portal de Selección Inteligente* ingresando aquí:
 👉 $clientAppUrl
 
-${if (rawBasePortalUrl.isEmpty()) "⚠️ (Nota: Configura tu URL de GitHub Pages en el engranaje de Ajustes del panel principal para que el enlace sea funcional para tus clientes)." else ""}
+${if (rawBasePortalUrl.isEmpty()) "💡 (Sugerencia: Puedes personalizar esta URL base por defecto en el icono de Ajustes del panel principal en cualquier momento)." else ""}
 _Sorteo gestionado en el ecosistema cuántico de Rifas Pro._
     """.trimIndent()
 
@@ -2230,7 +2230,10 @@ fun AppSettingsDialog(onDismiss: () -> Unit) {
     val context = LocalContext.current
     val prefs = remember { context.getSharedPreferences("raffle_prefs", Context.MODE_PRIVATE) }
     
-    var basePortalUrl by remember { mutableStateOf(prefs.getString("base_portal_url", "") ?: "") }
+    val savedBaseUrl = prefs.getString("base_portal_url", "")?.trim() ?: ""
+    var basePortalUrl by remember {
+        mutableStateOf(if (savedBaseUrl.isEmpty()) "https://monetizacionreymonfr2-max.github.io/Rifas-Pro-Meta-TC/" else savedBaseUrl)
+    }
     var organizerWhatsapp by remember { mutableStateOf(prefs.getString("organizer_whatsapp", "") ?: "") }
 
     AlertDialog(
